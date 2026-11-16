@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Horas</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f4f4f9; color: #333; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .form-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+    input, button { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    input { flex: 1; min-width: 120px; }
+    button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
+    button:hover { background: #1d4ed8; }
+    button.export { background: #16a34a; }
+    button.export:hover { background: #15803d; }
+    button.delete { background: #dc2626; padding: 5px 10px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+    th { background: #f8fafc; }
+    .resumo { display: flex; gap: 15px; flex-wrap: wrap; }
+    .badge { background: #e0e7ff; color: #1e40af; padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Registrar Horas Trabalhadas</h2>
+    <div class="form-group">
+      <input type="text" id="funcionario" placeholder="Nome do Funcionário" required>
+      <input type="date" id="data" required>
+      <input type="time" id="entrada" required>
+      <input type="time" id="saida" required>
+      <button onclick="adicionarRegistro()">Adicionar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Total Acumulado por Funcionário</h3>
+    <div id="resumo" class="resumo"></div>
+  </div>
+
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3>Histórico de Registros</h3>
+      <button class="export" onclick="exportarCSV()">Exportar para Excel (CSV)</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Funcionário</th>
+          <th>Data</th>
+          <th>Entrada</th>
+          <th>Saída</th>
+          <th>Total</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tabela-corpo"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // Carrega dados salvos no navegador ou inicia array vazio
+    let registros = JSON.parse(localStorage.getItem('controle_horas')) || [];
+
+    // Define a data de hoje como padrão no input
+    document.getElementById('data').valueAsDate = new Date();
+
+    function calcularHoras(entrada, saida) {
+      const [h1, m1] = entrada.split(':').map(Number);
+      const [h2, m2] = saida.split(':').map(Number);
+      
+      let minutos = (h2 * 60 + m2) - (h1 * 60 + m1);
+      if (minutos < 0) minutos += 24 * 60; // Caso vire a meia-noite
+      
+      return minutos / 60; // Retorna em horas decimais (ex: 8.5)
+    }
+
+    function formatarHoras(horasDecimais) {
+      const h = Math.floor(horasDecimais);
+      const m = Math.round((horasDecimais - h) * 60);
+      return `${h}h ${m.toString().padStart(2, '0')}m`;
+    }
+
+    function adicionarRegistro() {
+      const funcionario = document.getElementById('funcionario').value.trim();
+      const data = document.getElementById('data').value;
+      const entrada = document.getElementById('entrada').value;
+      const saida = document.getElementById('saida').value;
+
+      if (!funcionario || !data || !entrada || !saida) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+
+      const horas = calcularHoras(entrada, saida);
+
+      registros.push({ id: Date.now(), funcionario, data, entrada, saida, horas });
+      salvarERenderizar();
+
+      // Limpa apenas os horários para facilitar próximo lançamento
+      document.getElementById('entrada').value = '';
+      document.getElementById('saida').value = '';
+    }
+
+    function removerRegistro(id) {
+      registros = registros.filter(r => r.id !== id);
+      salvarERenderizar();
+    }
+
+    function salvarERenderizar() {
+      localStorage.setItem('controle_horas', JSON.stringify(registros));
+      renderizarTabela();
+      renderizarResumo();
+    }
+
+    function renderizarTabela() {
+      const tbody = document.getElementById('tabela-corpo');
+      tbody.innerHTML = '';
+
+      registros.forEach(reg => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${reg.funcionario}</td>
+          <td>${reg.data.split('-').reverse().join('/')}</td>
+          <td>${reg.entrada}</td>
+          <td>${reg.saida}</td>
+          <td><strong>${formatarHoras(reg.horas)}</strong></td>
+          <td><button class="delete" onclick="removerRegistro(${reg.id})">Excluir</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderizarResumo() {
+      const resumoDiv = document.getElementById('resumo');
+      resumoDiv.innerHTML = '';
+
+      const totais = {};
+      registros.forEach(reg => {
+        totais[reg.funcionario] = (totais[reg.funcionario] || 0) + reg.horas;
+      });
+
+      for (const [nome, totalHoras] of Object.entries(totais)) {
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = `${nome}: ${formatarHoras(totalHoras)}`;
+        resumoDiv.appendChild(badge);
+      }
+    }
+
+    function exportarCSV() {
+      if (registros.length === 0) return alert('Não há dados para exportar.');
+      
+      let csv = 'Funcionario,Data,Entrada,Saida,Horas_Decimais\n';
+      registros.forEach(r => {
+        csv += `"${r.funcionario}",${r.data},${r.entrada},${r.saida},${r.horas.toFixed(2)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `horas_funcionarios_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
+    // Inicializa a tela
+    salvarERenderizar();
+  </script>
+</body>
+</html>

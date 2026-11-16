@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controle de Horas Madre Bárbara — Padrão Apuração Ponto</title>
+  <title>Controle de Horas Madre Bárbara — Carga Mensal</title>
   <style>
     :root {
       --primary: #0f4c81;
@@ -17,7 +17,6 @@
     * { box-sizing: border-box; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 1180px; margin: 25px auto; padding: 0 16px; background: var(--bg); color: var(--text); }
     
-    /* Cabeçalho estilo ERP */
     .erp-header { background: var(--primary); color: white; padding: 16px 22px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
     .erp-header h1 { margin: 0; font-size: 1.45rem; letter-spacing: 0.3px; }
     .erp-header small { display: block; color: #bae6fd; font-size: 0.82rem; margin-top: 2px; }
@@ -49,7 +48,6 @@
     .mode-tabs input { display: none; }
     .mode-tabs label:has(input:checked) { background: var(--primary); color: white; }
 
-    /* Indicadores Totais (KPIs do Espelho) */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .kpi-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); padding: 12px; border-radius: 6px; }
     .kpi-box.warn { border-left-color: #d97706; background: #fffbeb; }
@@ -58,7 +56,6 @@
     .kpi-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
     .kpi-value { font-size: 1.35rem; font-weight: 800; color: var(--text); margin-top: 4px; }
 
-    /* Tabela estilo Espelho de Ponto Senior */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     th { background: #e2e8f0; color: #1e293b; font-weight: 700; text-align: left; padding: 9px 8px; border: 1px solid #cbd5e1; white-space: nowrap; }
@@ -72,7 +69,6 @@
     .b-ex100 { background: #bbf7d0; color: #14532d; border: 1px solid #16a34a; }
     .b-falta { background: #fee2e2; color: #991b1b; }
     .b-not { background: #f3e8ff; color: #6b21a8; }
-    .b-tol { background: #f1f5f9; color: #475569; }
   </style>
 </head>
 <body>
@@ -80,7 +76,7 @@
   <div class="erp-header">
     <div>
       <h1>Controle de Horas Madre Bárbara</h1>
-      <small>Apuração de Frequência, Escalas, Horas Faltantes e Eventos (50% / 100% / Noturno)</small>
+      <small>Apuração por Carga Horária Mensal, Horas Faltantes e Eventos (50% / 100% / Noturno)</small>
     </div>
     <div class="actions-bar">
       <button type="button" class="btn-white" onclick="document.getElementById('input-afd').click()">Importar AFD (.txt Relógio)</button>
@@ -93,9 +89,9 @@
   </div>
 
   <div class="grid-top">
-    <!-- 1. CADASTRO DE COLABORADOR E ESCALA -->
+    <!-- 1. CADASTRO DE COLABORADOR (APENAS CARGA MENSAL) -->
     <div class="card">
-      <h2 class="card-title">1. Cadastro de Colaborador & Escala</h2>
+      <h2 class="card-title">1. Cadastro de Colaborador</h2>
       
       <div class="form-row">
         <div class="field" style="flex: 2;">
@@ -110,58 +106,36 @@
 
       <div class="form-row">
         <div class="field">
-          <label>Carga Mensal (h)</label>
-          <input type="number" id="cad-carga-mensal" value="220" min="1">
+          <label>Carga Horária Mensal (Horas)</label>
+          <input type="number" id="cad-carga-horas" value="220" min="0" step="1">
         </div>
         <div class="field">
-          <label>Tolerância Dia (min)</label>
-          <input type="number" id="cad-tolerancia" value="10" min="0" max="60" title="CLT Art. 58: 5 min por batida, máx 10 min/dia">
+          <label>Minutos (Opcional)</label>
+          <input type="number" id="cad-carga-minutos" value="0" min="0" max="59" step="1">
         </div>
       </div>
 
-      <div style="font-size: 11px; font-weight: 700; color: #475569; margin: 8px 0 4px 0; text-transform: uppercase;">
-        Horário Base da Escala (4 Batidas):
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label>Ent. 1</label>
-          <input type="time" id="esc-e1" value="08:00">
-        </div>
-        <div class="field">
-          <label>Saí. 1 (Almoço)</label>
-          <input type="time" id="esc-s1" value="12:00">
-        </div>
-        <div class="field">
-          <label>Ent. 2 (Volta)</label>
-          <input type="time" id="esc-e2" value="13:12">
-        </div>
-        <div class="field">
-          <label>Saí. 2</label>
-          <input type="time" id="esc-s2" value="18:00">
-        </div>
-      </div>
-
-      <button type="button" class="btn-green" onclick="salvarColaborador()" style="width: 100%; margin-top: 6px;">
-        Salvar Colaborador na Escala
+      <button type="button" class="btn-green" onclick="salvarColaborador()" style="width: 100%; margin-top: 8px;">
+        Salvar Colaborador
       </button>
 
-      <div id="lista-colaboradores" style="margin-top: 12px; max-height: 150px; overflow-y: auto;"></div>
+      <div id="lista-colaboradores" style="margin-top: 14px; max-height: 200px; overflow-y: auto;"></div>
     </div>
 
     <!-- 2. LANÇAMENTO DE MARCAÇÕES / OCORRÊNCIAS -->
     <div class="card">
-      <h2 class="card-title" id="titulo-lancamento">2. Apuração Diária / Lançamento de Eventos</h2>
+      <h2 class="card-title" id="titulo-lancamento">2. Lançamento de Horas e Eventos</h2>
 
       <div class="mode-tabs">
-        <label><input type="radio" name="modo" value="marcacoes" checked onchange="mudarModo()"> Marcações do Dia (4 Batidas)</label>
-        <label><input type="radio" name="modo" value="evento" onchange="mudarModo()"> Evento Avulso (Excedido / Falta)</label>
+        <label><input type="radio" name="modo" value="evento" checked onchange="mudarModo()"> Tempo Excedido / Falta (H:M)</label>
+        <label><input type="radio" name="modo" value="marcacoes" onchange="mudarModo()"> Batidas do Dia (Entrada / Saída)</label>
       </div>
 
       <div class="form-row">
         <div class="field" style="flex: 1.6;">
           <label>Colaborador</label>
           <select id="sel-colab" onchange="renderizarTudo()">
-            <option value="">-- Todos / Selecione --</option>
+            <option value="">-- Todos os Colaboradores (ou selecione) --</option>
           </select>
         </div>
         <div class="field">
@@ -170,8 +144,31 @@
         </div>
       </div>
 
-      <!-- MODO 4 BATIDAS -->
-      <div id="area-marcacoes">
+      <!-- MODO EVENTO AVULSO (PADRÃO) -->
+      <div id="area-evento">
+        <div class="form-row">
+          <div class="field" style="flex: 1.6;">
+            <label>Situação (Código Evento)</label>
+            <select id="ev-tipo">
+              <option value="normal">+ Abater da Carga Mensal (Hora Cumprida)</option>
+              <option value="ex50">+ Hora Extra 50% (Excedido)</option>
+              <option value="ex100">+ Hora Extra 100% (Domingo/Feriado)</option>
+              <option value="falta">- Falta / Atraso (Aumenta Faltantes)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Horas</label>
+            <input type="number" id="ev-h" placeholder="0" min="0">
+          </div>
+          <div class="field">
+            <label>Minutos</label>
+            <input type="number" id="ev-m" placeholder="0" min="0" max="59">
+          </div>
+        </div>
+      </div>
+
+      <!-- MODO BATIDAS -->
+      <div id="area-marcacoes" style="display: none;">
         <div class="form-row">
           <div class="field">
             <label>1ª Entrada</label>
@@ -193,36 +190,13 @@
         <div class="form-row" style="align-items: center; margin-top: 4px;">
           <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;">
             <input type="checkbox" id="m-feriado" style="width: auto;">
-            Domingo / Feriado / Folga Trabalhada (Apurar Extras a 100%)
+            Domingo / Feriado / Folga Trabalhada (Apurar como Extra 100%)
           </label>
         </div>
       </div>
 
-      <!-- MODO EVENTO AVULSO -->
-      <div id="area-evento" style="display: none;">
-        <div class="form-row">
-          <div class="field" style="flex: 1.5;">
-            <label>Situação (Código Evento)</label>
-            <select id="ev-tipo">
-              <option value="ex50">+ Hora Extra 50% (Excedido)</option>
-              <option value="ex100">+ Hora Extra 100% (Domingo/Feriado)</option>
-              <option value="normal">+ Abono / Hora Normal Cumprida</option>
-              <option value="falta">- Falta / Atraso (Aumenta Faltantes)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Horas</label>
-            <input type="number" id="ev-h" placeholder="0" min="0">
-          </div>
-          <div class="field">
-            <label>Minutos</label>
-            <input type="number" id="ev-m" placeholder="0" min="0" max="59">
-          </div>
-        </div>
-      </div>
-
       <div class="form-row" style="margin-top: 12px;">
-        <button type="button" id="btn-lancar" onclick="salvarLancamento()" style="flex: 1;">Apurar e Salvar Dia</button>
+        <button type="button" id="btn-lancar" onclick="salvarLancamento()" style="flex: 1;">Lançar e Apurar</button>
         <button type="button" id="btn-cancelar" class="btn-slate" onclick="cancelarEdicao()" style="display: none;">Cancelar</button>
       </div>
     </div>
@@ -230,7 +204,7 @@
 
   <!-- RESUMO CONSOLIDADO POR COLABORADOR -->
   <div class="card">
-    <h2 class="card-title">3. Resumo de Saldos por Colaborador (Visão Mensal)</h2>
+    <h2 class="card-title">3. Resumo de Saldos por Colaborador (Base Mensal)</h2>
     <div class="kpi-grid" id="kpi-resumo"></div>
     <div class="table-wrap">
       <table>
@@ -254,7 +228,7 @@
   <!-- ESPELHO DE PONTO DETALHADO -->
   <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-      <h2 class="card-title" style="margin: 0; border: none;">4. Espelho de Ponto Analítico</h2>
+      <h2 class="card-title" style="margin: 0; border: none;">4. Espelho Analítico de Lançamentos</h2>
       <div class="actions-bar">
         <button type="button" class="btn-green" onclick="exportarCSV()">Exportar Espelho (CSV / Excel)</button>
         <button type="button" class="btn-red" onclick="zerarLancamentos()">Zerar Lançamentos do Mês</button>
@@ -268,9 +242,8 @@
             <th>Data</th>
             <th>Colaborador</th>
             <th>Marcações / Evento</th>
-            <th>Previsto Dia</th>
             <th>Trabalhado</th>
-            <th>Normais</th>
+            <th>Normais (Abatido)</th>
             <th>Extra 50%</th>
             <th>Extra 100%</th>
             <th>Faltas/Atraso</th>
@@ -281,7 +254,7 @@
         <tbody id="tabela-espelho"></tbody>
         <tfoot>
           <tr>
-            <td colspan="4" style="text-align: right;">TOTAIS APURADOS NO ESPELHO:</td>
+            <td colspan="3" style="text-align: right;">TOTAIS APURADOS NO ESPELHO:</td>
             <td id="tot-trab">00:00</td>
             <td id="tot-norm">00:00</td>
             <td id="tot-ex50">00:00</td>
@@ -296,8 +269,8 @@
   </div>
 
   <script>
-    const KEY_COLAB = 'mb_senior_colaboradores_v1';
-    const KEY_LANC = 'mb_senior_lancamentos_v1';
+    const KEY_COLAB = 'mb_senior_colaboradores_mensal_v2';
+    const KEY_LANC = 'mb_senior_lancamentos_mensal_v2';
 
     let colaboradores = [];
     let lancamentos = [];
@@ -319,7 +292,6 @@
     }
     setHoje();
 
-    // --- UTILITÁRIOS DE TEMPO (MINUTOS <-> HH:MM) ---
     function timeToMin(str) {
       if (!str || !str.includes(':')) return null;
       const [h, m] = str.split(':').map(Number);
@@ -339,11 +311,10 @@
       const fim = timeToMin(fimStr);
       if (ini === null || fim === null) return 0;
       let diff = fim - ini;
-      if (diff < 0) diff += 1440; // virada de meia-noite
+      if (diff < 0) diff += 1440;
       return diff;
     }
 
-    // Cálculo de Adicional Noturno (22:00 às 05:00) com redução 52m30s (fator 60 / 52.5 = 1.142857)
     function calcMinutosNoturnos(iniStr, fimStr) {
       const ini = timeToMin(iniStr);
       let fim = timeToMin(fimStr);
@@ -353,7 +324,7 @@
       let minNoturnosRelogio = 0;
       for (let t = ini; t < fim; t++) {
         const minDoDia = t % 1440;
-        if (minDoDia >= 1320 || minDoDia < 300) { // >= 22:00 (1320) ou < 05:00 (300)
+        if (minDoDia >= 1320 || minDoDia < 300) {
           minNoturnosRelogio++;
         }
       }
@@ -366,30 +337,24 @@
       document.getElementById('area-evento').style.display = modo === 'evento' ? 'block' : 'none';
     }
 
-    // --- CADASTRO DE COLABORADORES ---
+    // --- CADASTRO DE COLABORADORES (APENAS CARGA MENSAL) ---
     function salvarColaborador() {
       const nome = document.getElementById('cad-nome').value.trim();
       const pis = document.getElementById('cad-pis').value.trim();
-      const cargaMensalH = parseInt(document.getElementById('cad-carga-mensal').value, 10) || 220;
-      const tolerancia = parseInt(document.getElementById('cad-tolerancia').value, 10) || 0;
-      const e1 = document.getElementById('esc-e1').value;
-      const s1 = document.getElementById('esc-s1').value;
-      const e2 = document.getElementById('esc-e2').value;
-      const s2 = document.getElementById('esc-s2').value;
+      const cargaH = parseInt(document.getElementById('cad-carga-horas').value, 10) || 0;
+      const cargaM = parseInt(document.getElementById('cad-carga-minutos').value, 10) || 0;
 
       if (!nome) return alert('Informe o nome do colaborador.');
+      const cargaMensalMin = (cargaH * 60) + cargaM;
+      if (cargaMensalMin <= 0) return alert('Informe uma carga horária mensal maior que zero.');
 
-      const previstoDiaMin = calcIntervalo(e1, s1) + calcIntervalo(e2, s2);
       const existenteIdx = colaboradores.findIndex(c => c.nome.toLowerCase() === nome.toLowerCase());
 
       const obj = {
         id: existenteIdx !== -1 ? colaboradores[existenteIdx].id : Date.now(),
         nome,
         pis,
-        cargaMensalMin: cargaMensalH * 60,
-        tolerancia,
-        e1, s1, e2, s2,
-        previstoDiaMin
+        cargaMensalMin
       };
 
       if (existenteIdx !== -1) colaboradores[existenteIdx] = obj;
@@ -406,83 +371,45 @@
       persistir();
     }
 
-    // --- MOTOR DE APURAÇÃO (ESTILO SENIOR) ---
-    function apurarDia(colab, dados) {
+    // --- APURAÇÃO MENSAL ---
+    function apurarLancamento(dados) {
       if (dados.modo === 'evento') {
         const min = (Number(dados.evH) || 0) * 60 + (Number(dados.evM) || 0);
         return {
-          previstoMin: 0,
           trabalhadoMin: dados.evTipo === 'falta' ? 0 : min,
           normaisMin: dados.evTipo === 'normal' ? min : 0,
           ex50Min: dados.evTipo === 'ex50' ? min : 0,
           ex100Min: dados.evTipo === 'ex100' ? min : 0,
           faltaMin: dados.evTipo === 'falta' ? min : 0,
-          noturnoMin: 0,
-          abonadoTolerancia: false
+          noturnoMin: 0
         };
       }
 
-      // Modo 4 batidas
+      // Modo batidas: todas as horas trabalhadas abatem diretamente da carga mensal (ou viram 100% se for feriado/folga)
       const t1 = calcIntervalo(dados.e1, dados.s1);
       const t2 = calcIntervalo(dados.e2, dados.s2);
       const trabalhadoMin = t1 + t2;
       const noturnoMin = calcMinutosNoturnos(dados.e1, dados.s1) + calcMinutosNoturnos(dados.e2, dados.s2);
 
-      // Se for feriado/folga trabalhada (100%)
       if (dados.feriado) {
         return {
-          previstoMin: 0,
           trabalhadoMin,
           normaisMin: 0,
           ex50Min: 0,
           ex100Min: trabalhadoMin,
           faltaMin: 0,
-          noturnoMin,
-          abonadoTolerancia: false
+          noturnoMin
         };
       }
 
-      const previstoMin = colab ? colab.previstoDiaMin : 480;
-      const tolerancia = colab ? colab.tolerancia : 10;
-      const diff = trabalhadoMin - previstoMin;
-
-      // Regra de Tolerância CLT (Art. 58 § 1º): variação dentro da tolerância não gera extra nem falta
-      if (Math.abs(diff) <= tolerancia) {
-        return {
-          previstoMin,
-          trabalhadoMin,
-          normaisMin: previstoMin, // Considera jornada integral cumprida
-          ex50Min: 0,
-          ex100Min: 0,
-          faltaMin: 0,
-          noturnoMin,
-          abonadoTolerancia: diff !== 0
-        };
-      }
-
-      if (diff > 0) {
-        return {
-          previstoMin,
-          trabalhadoMin,
-          normaisMin: previstoMin,
-          ex50Min: diff,
-          ex100Min: 0,
-          faltaMin: 0,
-          noturnoMin,
-          abonadoTolerancia: false
-        };
-      } else {
-        return {
-          previstoMin,
-          trabalhadoMin,
-          normaisMin: trabalhadoMin,
-          ex50Min: 0,
-          ex100Min: 0,
-          faltaMin: Math.abs(diff),
-          noturnoMin,
-          abonadoTolerancia: false
-        };
-      }
+      return {
+        trabalhadoMin,
+        normaisMin: trabalhadoMin,
+        ex50Min: 0,
+        ex100Min: 0,
+        faltaMin: 0,
+        noturnoMin
+      };
     }
 
     function salvarLancamento() {
@@ -554,7 +481,7 @@
         document.getElementById('ev-m').value = l.evM || '';
       }
 
-      document.getElementById('titulo-lancamento').textContent = 'Editando Marcação / Evento';
+      document.getElementById('titulo-lancamento').textContent = 'Editando Lançamento';
       const btn = document.getElementById('btn-lancar');
       btn.textContent = 'Salvar Alteração';
       btn.classList.add('btn-amber');
@@ -565,9 +492,9 @@
     function cancelarEdicao() {
       editId = null;
       limparInputsLancamento();
-      document.getElementById('titulo-lancamento').textContent = '2. Apuração Diária / Lançamento de Eventos';
+      document.getElementById('titulo-lancamento').textContent = '2. Lançamento de Horas e Eventos';
       const btn = document.getElementById('btn-lancar');
-      btn.textContent = 'Apurar e Salvar Dia';
+      btn.textContent = 'Lançar e Apurar';
       btn.classList.remove('btn-amber');
       document.getElementById('btn-cancelar').style.display = 'none';
     }
@@ -620,14 +547,15 @@
       colaboradores.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.textContent = `${c.nome} (Carga: ${minToHHMM(c.cargaMensalMin)})`;
+        opt.textContent = `${c.nome} (Carga Mensal: ${minToHHMM(c.cargaMensalMin)})`;
         sel.appendChild(opt);
 
         const item = document.createElement('div');
-        item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #e2e8f0; font-size:12px;';
+        item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:7px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px;';
         item.innerHTML = `
           <div>
-            <strong>${c.nome}</strong> • Mensal: ${minToHHMM(c.cargaMensalMin)} • Dia: ${minToHHMM(c.previstoDiaMin)} (Tol. ${c.tolerancia}m)
+            <strong>${c.nome}</strong> • Carga Mensal: <strong>${minToHHMM(c.cargaMensalMin)}</strong>
+            ${c.pis ? `<span style="color:#64748b;">(PIS: ${c.pis})</span>` : ''}
           </div>
           <button type="button" class="btn-red btn-sm" onclick="removerColaborador(${c.id})">X</button>
         `;
@@ -636,13 +564,12 @@
 
       if (filtroAtual) sel.value = filtroAtual;
 
-      // Apura totais por colaborador
       const resumoMapa = {};
       colaboradores.forEach(c => {
         resumoMapa[c.id] = {
           nome: c.nome,
           cargaMensalMin: c.cargaMensalMin,
-          cumpridoMin: 0,
+          normaisMin: 0,
           ex50Min: 0,
           ex100Min: 0,
           faltaMin: 0,
@@ -655,29 +582,25 @@
 
       let totTrab = 0, totNorm = 0, totEx50 = 0, totEx100 = 0, totFalta = 0, totNot = 0;
 
-      // Ordena lançamentos por data
       const lancOrdenados = [...lancamentos].sort((a, b) => a.data.localeCompare(b.data));
 
       lancOrdenados.forEach(l => {
-        const colab = colaboradores.find(c => c.id === l.colabId);
-        const ap = apurarDia(colab, l);
+        const ap = apurarLancamento(l);
 
         if (!resumoMapa[l.colabId]) {
           resumoMapa[l.colabId] = {
             nome: l.colabNome,
             cargaMensalMin: 13200,
-            cumpridoMin: 0, ex50Min: 0, ex100Min: 0, faltaMin: 0, noturnoMin: 0
+            normaisMin: 0, ex50Min: 0, ex100Min: 0, faltaMin: 0, noturnoMin: 0
           };
         }
 
-        // Soma no resumo do colaborador
-        resumoMapa[l.colabId].cumpridoMin += (ap.normaisMin + ap.ex50Min + ap.ex100Min - ap.faltaMin);
+        resumoMapa[l.colabId].normaisMin += ap.normaisMin;
         resumoMapa[l.colabId].ex50Min += ap.ex50Min;
         resumoMapa[l.colabId].ex100Min += ap.ex100Min;
         resumoMapa[l.colabId].faltaMin += ap.faltaMin;
         resumoMapa[l.colabId].noturnoMin += ap.noturnoMin;
 
-        // Filtra tabela analítica se houver colaborador selecionado
         if (filtroAtual && String(l.colabId) !== String(filtroAtual)) return;
 
         totTrab += ap.trabalhadoMin;
@@ -691,10 +614,14 @@
         if (l.modo === 'marcacoes') {
           descBatidas = `${l.e1} - ${l.s1}` + (l.e2 && l.s2 ? ` | ${l.e2} - ${l.s2}` : '');
           if (l.feriado) descBatidas += ` <span class="badge b-ex100">100%</span>`;
-          if (ap.abonadoTolerancia) descBatidas += ` <span class="badge b-tol">Tol. CLT</span>`;
         } else {
-          const mapEv = { ex50: 'Extra 50%', ex100: 'Extra 100%', normal: 'Abono Normal', falta: 'Falta/Atraso' };
-          descBatidas = `<em>Evento: ${mapEv[l.evTipo]}</em>`;
+          const mapEv = {
+            normal: 'Abatimento Carga Mensal',
+            ex50: 'Hora Extra 50%',
+            ex100: 'Hora Extra 100%',
+            falta: 'Falta / Atraso'
+          };
+          descBatidas = `<em>${mapEv[l.evTipo]}</em>`;
         }
 
         const tr = document.createElement('tr');
@@ -702,7 +629,6 @@
           <td>${l.data.split('-').reverse().join('/')}</td>
           <td><strong>${l.colabNome}</strong></td>
           <td>${descBatidas}</td>
-          <td>${minToHHMM(ap.previstoMin)}</td>
           <td><strong>${minToHHMM(ap.trabalhadoMin)}</strong></td>
           <td><span class="badge b-norm">${minToHHMM(ap.normaisMin)}</span></td>
           <td>${ap.ex50Min > 0 ? `<span class="badge b-ex50">${minToHHMM(ap.ex50Min)}</span>` : '00:00'}</td>
@@ -724,7 +650,6 @@
       document.getElementById('tot-falta').textContent = minToHHMM(totFalta);
       document.getElementById('tot-not').textContent = minToHHMM(totNot);
 
-      // Renderiza Tabela de Resumo por Colaborador e KPIs
       const tbodyResumo = document.getElementById('tabela-resumo-colab');
       const kpiDiv = document.getElementById('kpi-resumo');
       tbodyResumo.innerHTML = '';
@@ -735,9 +660,16 @@
       Object.entries(resumoMapa).forEach(([id, r]) => {
         if (filtroAtual && String(id) !== String(filtroAtual)) return;
 
-        const faltantesMin = Math.max(0, r.cargaMensalMin - r.cumpridoMin);
+        // Saldo líquido cumprido em relação à carga mensal = (Normais + Extras 50% + Extras 100%) - Faltas
+        const totalLiquidoCumprido = (r.normaisMin + r.ex50Min + r.ex100Min) - r.faltaMin;
+        const faltantesMin = Math.max(0, r.cargaMensalMin - totalLiquidoCumprido);
+        
+        // Se ultrapassou a carga mensal via batidas normais, o excedente soma nas extras 50%
+        const excedenteSobreMensal = Math.max(0, totalLiquidoCumprido - r.cargaMensalMin);
+        const totalEx50Exibido = r.ex50Min + Math.max(0, excedenteSobreMensal - r.ex50Min - r.ex100Min);
+
         geralFaltantes += faltantesMin;
-        geralEx50 += r.ex50Min;
+        geralEx50 += totalEx50Exibido;
         geralEx100 += r.ex100Min;
         geralFaltasEvento += r.faltaMin;
 
@@ -745,9 +677,9 @@
         tr.innerHTML = `
           <td><strong>${r.nome}</strong></td>
           <td>${minToHHMM(r.cargaMensalMin)}</td>
-          <td>${minToHHMM(r.cumpridoMin)}</td>
+          <td>${minToHHMM(totalLiquidoCumprido)}</td>
           <td><span class="badge ${faltantesMin > 0 ? 'b-falta' : 'b-ex50'}">${minToHHMM(faltantesMin)}</span></td>
-          <td><span class="badge b-ex50">${minToHHMM(r.ex50Min)}</span></td>
+          <td><span class="badge b-ex50">${minToHHMM(totalEx50Exibido)}</span></td>
           <td><span class="badge b-ex100">${minToHHMM(r.ex100Min)}</span></td>
           <td><span class="badge b-falta">${minToHHMM(r.faltaMin)}</span></td>
           <td><span class="badge b-not">${minToHHMM(r.noturnoMin)}</span></td>
@@ -769,13 +701,13 @@
           <div class="kpi-value">${minToHHMM(geralEx100)}</div>
         </div>
         <div class="kpi-box bad">
-          <div class="kpi-label">Faltas / Atrasos Apurados</div>
+          <div class="kpi-label">Faltas / Atrasos Lançados</div>
           <div class="kpi-value">${minToHHMM(geralFaltasEvento)}</div>
         </div>
       `;
     }
 
-    // --- IMPORTAÇÃO DE ARQUIVO AFD (RELÓGIO DE PONTO PORTARIA 1510/671) ---
+    // --- IMPORTAÇÃO DE ARQUIVO AFD ---
     function importarAFD(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -787,95 +719,10 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         const linhas = e.target.result.split(/\r?\n/);
-        const batidasAgrupadas = {}; // chave: colabId_YYYY-MM-DD -> array de HH:MM
+        const batidasAgrupadas = {};
 
         linhas.forEach(linha => {
-          // Tipo 3 = Marcação de ponto no layout AFD padrão
           if (linha.length >= 34 && linha.charAt(9) === '3') {
-            const dataStr = linha.substring(10, 18); // DDMMAAAA
-            const horaStr = linha.substring(18, 22); // HHMM
-            const pisStr = linha.substring(22, 34).replace(/^0+/, '');
-
-            const colab = colaboradores.find(c => c.pis && c.pis.replace(/\D/g, '').replace(/^0+/, '') === pisStr);
-            if (colab) {
-              const dataISO = `${dataStr.substring(4,8)}-${dataStr.substring(2,4)}-${dataStr.substring(0,2)}`;
-              const horaFmt = `${horaStr.substring(0,2)}:${horaStr.substring(2,4)}`;
-              const chave = `${colab.id}_${dataISO}`;
-              if (!batidasAgrupadas[chave]) batidasAgrupadas[chave] = { colab, dataISO, horas: [] };
-              batidasAgrupadas[chave].horas.push(horaFmt);
-            }
-          }
-        });
-
-        let importados = 0;
-        Object.values(batidasAgrupadas).forEach(grupo => {
-          grupo.horas.sort();
-          if (grupo.horas.length >= 2) {
-            lancamentos.push({
-              id: Date.now() + Math.random(),
-              colabId: grupo.colab.id,
-              colabNome: grupo.colab.nome,
-              data: grupo.dataISO,
-              modo: 'marcacoes',
-              e1: grupo.horas[0] || '',
-              s1: grupo.horas[1] || '',
-              e2: grupo.horas[2] || '',
-              s2: grupo.horas[3] || '',
-              feriado: false
-            });
-            importados++;
-          }
-        });
-
-        persistir();
-        alert(`Importação AFD concluída: ${importados} dias apurados a partir do PIS dos colaboradores cadastrados.`);
-      };
-      reader.readAsText(file);
-    }
-
-    // --- EXPORTAÇÃO CSV E BACKUP ---
-    function exportarCSV() {
-      if (lancamentos.length === 0) return alert('Não há lançamentos para exportar.');
-      let csv = 'Data,Colaborador,Detalhe,Previsto,Trabalhado,Normais,Extra_50,Extra_100,Faltas_Atrasos,Noturno\n';
-      lancamentos.forEach(l => {
-        const colab = colaboradores.find(c => c.id === l.colabId);
-        const ap = apurarDia(colab, l);
-        const det = l.modo === 'marcacoes' ? `${l.e1}-${l.s1} ${l.e2}-${l.s2}` : l.evTipo;
-        csv += `${l.data},"${l.colabNome}","${det}",${minToHHMM(ap.previstoMin)},${minToHHMM(ap.trabalhadoMin)},${minToHHMM(ap.normaisMin)},${minToHHMM(ap.ex50Min)},${minToHHMM(ap.ex100Min)},${minToHHMM(ap.faltaMin)},${minToHHMM(ap.noturnoMin)}\n`;
-      });
-      baixar(csv, `espelho_ponto_madre_barbara_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');
-    }
-
-    function exportarBackupJSON() {
-      baixar(JSON.stringify({ colaboradores, lancamentos }, null, 2), `backup_ponto_madre_barbara_${new Date().toISOString().slice(0,10)}.json`, 'application/json');
-    }
-
-    function importarBackupJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const d = JSON.parse(e.target.result);
-          if (Array.isArray(d.colaboradores) && Array.isArray(d.lancamentos)) {
-            colaboradores = d.colaboradores;
-            lancamentos = d.lancamentos;
-            persistir();
-            alert('Backup restaurado!');
-          }
-        } catch (err) { alert('Arquivo inválido.'); }
-      };
-      reader.readAsText(file);
-    }
-
-    function baixar(conteudo, nome, tipo) {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
-      a.download = nome;
-      a.click();
-    }
-
-    renderizarTudo();
-  </script>
-</body>
-</html>
+            const dataStr = linha.substring(10, 18);
+            const horaStr = linha.substring(18, 22);
+            const pisStr = linha.substring(2
